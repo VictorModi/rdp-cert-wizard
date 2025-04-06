@@ -3,6 +3,30 @@ use std::process::Command;
 
 use anyhow::{Context, Result};
 
+pub fn check_thumbprint_in_cert_store(thumbprint: &str) -> std::io::Result<bool> {
+    let ps_script = r#"
+        Get-ChildItem Cert:\LocalMachine\My |
+        Select-Object -ExpandProperty Thumbprint |
+        ForEach-Object { $_.ToUpper().Replace(" ", "") }
+    "#;
+
+    let output = Command::new("powershell")
+        .arg("-Command")
+        .arg(ps_script)
+        .output()?;
+
+    if !output.status.success() {
+        eprintln!("PowerShell 执行失败：{}", String::from_utf8_lossy(&output.stderr));
+        return Ok(false);
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let thumbprint_clean = thumbprint.to_uppercase().replace(" ", "");
+
+    let found = stdout.lines().any(|line| line.trim() == thumbprint_clean);
+    Ok(found)
+}
+
 pub fn import_pfx(pfx_path: &PathBuf, password: &str) -> Result<()> {
     // Validate the PFX file exists
     if !pfx_path.exists() {
@@ -18,7 +42,7 @@ pub fn import_pfx(pfx_path: &PathBuf, password: &str) -> Result<()> {
         try {{
             $params = @{{
                 FilePath = '{}'
-                CertStoreLocation = 'Cert:\LocalMachine\My'
+                CertStoreLocation = 'Cert\My'
                 Password = {}
             }}
             Import-PfxCertificate @params -ErrorAction Stop
@@ -43,7 +67,7 @@ pub fn import_pfx(pfx_path: &PathBuf, password: &str) -> Result<()> {
             error_msg.trim()
         ));
     }
-
+    println!("{}", String::from_utf8_lossy(&output.stdout));
     Ok(())
 }
 

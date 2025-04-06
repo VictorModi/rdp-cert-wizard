@@ -12,4 +12,7 @@ pub struct Args {
 
     #[arg(short = 'p', long)]
     pub password: Option<String>,
+
+    #[arg(short = 'r', long)]
+    pub restart: Option<bool>,
 }
