@@ -42,7 +42,7 @@ pub fn import_pfx(pfx_path: &PathBuf, password: &str) -> Result<()> {
         try {{
             $params = @{{
                 FilePath = '{}'
-                CertStoreLocation = 'Cert\My'
+                CertStoreLocation = 'Cert:\LocalMachine\My'
                 Password = {}
             }}
             Import-PfxCertificate @params -ErrorAction Stop

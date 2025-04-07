@@ -9,6 +9,7 @@ pub fn set_rdp_certificate_thumbprint(thumbprint: &str) -> Result<Vec<u8>, Strin
     // 构建 PowerShell 命令
     let ps_script = format!(
         r#"$path = (Get-WmiObject -Namespace root\cimv2\TerminalServices -Class Win32_TSGeneralSetting -Filter 'TerminalName="RDP-Tcp"').__path;
+        Set-WmiInstance -Path $path -Arguments @{{ SSLCertificateSHA1Hash = "" }}
         Set-WmiInstance -Path $path -argument @{{SSLCertificateSHA1Hash="{}"}}"#,
         cleaned_thumbprint
     );
